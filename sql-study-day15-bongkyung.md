@@ -93,6 +93,7 @@ COMMIT;
 | 세션 A(SQL Developer) | 세션 B(SQL * PLUS) |
 |:--------------:|:------------:|
 | SELECT * FROM DEPT_TCL; <-1. | SELECT * FROM DEPT_TCL; <-2. |
+
 ▶︎ 두 세션 모두 똑같은 DEPT_TCL 테이블을 조회했으므로 조회 결과는 같다.
 <br/>
 
@@ -102,6 +103,7 @@ COMMIT;
 |:--------------:|:------------:|
 | DELETE FROM DEPT_TCL<br/> WHERE DEPTNO = 50; <- 1. | 세션 A의 DELETC 명령이 끝날 때까지 기다려 주세요. |
 | SELECT * FROM DEPT_TCL; <- 2. | SELECT * FROM DEPT_TCL; <- 3. |
+
 ▶︎ 세션 알아보기2의 결과에서 세션 A에서는 50번 부서가 삭제된 상태로 DETP_TCL 테이블이 조회되자만 세션 B에서는 50번 부서가 아직 삭제되지 않은 상태, 즉 변경이 일어나기 전 상태로 출력된다.
 이는 세션 A에서 실행한 DELETE문의 수행 결과가 데이터베이스에 완벽하게 반영되지 않았기 때문이다. 즉 COMMIT되지 않았다는 이야기이다. COMMIT 명령어로 세션 A에서 실행한 DELETE문의 실행 결과가 데이터베이스에 영구히 반영되기 전까지 DELETE를 실행한 세션 A를 제외한 다른 세션에서는 50번 부서 데이터의 변화를 확인할 수 없다.
 이와 같이 어떤 데이터 조작이 포함된 트랜잭션이 완료(COMMIT, ROLLBACK)되기 전까지 데이터를 직접 조작하는 세션 외 다른 세션에서는 데이터 조작 전 상태의 내용이 일관적으로 조회•출력•검색되는 특성을 '읽기 일관성(read consistency)'이라고 한다.
@@ -113,6 +115,7 @@ COMMIT;
 |:--------------:|:------------:|
 | COMMIT; <-1 | 세션 A의 COMMIT 명령이 끝날 때까지 기다려 주세요. |
 | SELECT * FROM DEPT_TCL; <- 2 | SELECT * FROM DEPT_TCL; <- 3 |
+
 ▶︎ 세션 알아보기3과 같이 세션 A에서 COMMIT 실행 후에는 세션 알아보기2에서 실행한 50번 부서를 삭제하는 DELETE문 수행 결과가 데이터베이스에 완전히 반영된다. 따라서 세션 B에서도 50번 부서가 삭제된 채 조회되는 것을 확인할 수 있다.
 <br/>
 
@@ -143,6 +146,7 @@ COMMIT;
 |:--------------:|:------------:|
 | UPDATE DEPT_TCL SET LOC='SEOUL'<br/> WHERE DEPTNO = 30; <- 1. | 세션 A의 UPDATE 명령이 끝날 때까지 기다려 주세요. |
 | SELECT * FROM DEPT_TCL; <- 2. | SELECT * FROM DEPT_TCL; <- 3. |
+
 ▶︎ UPDATE문을 실행하고 있는 세션 A에서는 30번 부서의 LOC열이 SEOUL로 변경되었지만 COMMIT은 되지 않은 상태이므로 세션 B에서는 30번 부서에 변화가 없다.
 
 - SQL Developer와 SQL * PLUS로 LOCK 알아보기 3
@@ -150,6 +154,7 @@ COMMIT;
 | 세션 A(SQL Developer) | 세션 B(SQL * PLUS) |
 |:--------------:|:------------:|
 | A는 아무런 작업을 하지 않습니다. | UPDATE DEPT_TCL SET DNAME='DATABASE'<br/> WHERE DEPTNO = 30; <- 1. |
+
 ▶︎ 세션 B에서 UPDATE문을 작성하고 실행하면 아무런 동작이 일어나지 않는다. SQL * PLUS 화면을 보면 화면이 멈춘 듯 가만히 있을 것이다.
 
 - 이는 세션 A에서 DEPT_TCL 테이블의 30번 부서 데이터를 먼저 조작하고 있기 때문이다. 세션 A에서 수행 중인 30번 부서 행 데이터의 조작이 완료되지 않았기 때문에 COMMIT 또는 ROLLBACK을 수행하기 전까지 30번 부서 행 데이터를 조작하려는 다른 세션은 작업을 대기하게 된다. 이렇게 특정 세션에서 데이터 조작이 완료될 때까지 다른 세션에서 해당 데이터 조작을 기다리는 현상을 HANG(행)이라고 한다.
@@ -161,6 +166,7 @@ COMMIT;
 | 세션 A(SQL Developer) | 세션 B(SQL * PLUS) |
 |:--------------:|:------------:|
 | COMMIT; <- 1. | 세션 A의 COMMIT 명령어가 실행되는 순간의 변화를 확인합니다. |
+
 ▶︎ 세션 A에서 COMMIT 명령어를 실행하는 순간 세션 B의 UPDATE문이 실행된 것을 확인할 수 있다. 세션 A에 의해 LOCK 상태였던 30번 부서 데이터가 COMMIT 명령어로 트랜잭션이 완료되어 LOCK이 풀렸고, 이와 동시에 30번 부서 데이터 작업을 기다리고 있던 세션 B의 UPDATE문이 실행된 것이다.
 <br/>
 
